@@ -1,0 +1,355 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nemo 상가 데이터 프리미엄 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #f43f5e;
+            --background: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--glass);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .summary-card h3 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .summary-card .unit {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-left: 0.3rem;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .chart-card {
+            height: 450px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            border-left: 4px solid var(--primary);
+            padding-left: 1rem;
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-card {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <div>
+                <h1>Nemo Real Estate Analytics</h1>
+                <p style="color: var(--text-muted)">강남권 상업용 부동산 데이터 실시간 분석 현황</p>
+            </div>
+            <div style="text-align: right">
+                <p style="font-weight: 600">Updated: 673 Units</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted)">2026-04-28 11:10:33</p>
+            </div>
+        </header>
+
+        <div class="summary-grid">
+            <div class="card summary-card">
+                <h3>Total Listings</h3>
+                <div class="value">673</div>
+                <div class="unit">개 매물</div>
+            </div>
+            <div class="card summary-card">
+                <h3>Avg Monthly Rent</h3>
+                <div class="value">5346.6</div>
+                <div class="unit">만원</div>
+            </div>
+            <div class="card summary-card">
+                <h3>Avg Deposit</h3>
+                <div class="value">68955.0</div>
+                <div class="unit">만원</div>
+            </div>
+            <div class="card summary-card">
+                <h3>Dominant Sector</h3>
+                <div class="value" style="font-size: 1.5rem">기타업종</div>
+                <div class="unit">업종</div>
+            </div>
+        </div>
+
+        <div class="chart-grid">
+            <div class="card chart-card">
+                <h2>월세 구간별 분포</h2>
+                <div class="chart-container">
+                    <canvas id="rentDistChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <h2>업종별 매물 비중</h2>
+                <div class="chart-container">
+                    <canvas id="businessPieChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <h2>보증금 vs 월세 상관관계</h2>
+                <div class="chart-container">
+                    <canvas id="rentScatterChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <h2>면적별(평수) 매물 분포</h2>
+                <div class="chart-container">
+                    <canvas id="sizeBarChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card">
+                <h2>주요 층수별 매물 현황</h2>
+                <div class="chart-container">
+                    <canvas id="floorChart"></canvas>
+                </div>
+            </div>
+            <div class="card chart-card" style="justify-content: center; align-items: center; background: linear-gradient(135deg, var(--primary), var(--secondary)); opacity: 0.9;">
+                <div style="text-align: center">
+                    <h2 style="border: none; color: white; margin-bottom: 1rem">AI Insight</h2>
+                    <p style="font-size: 1.1rem; max-width: 80%; margin: 0 auto; line-height: 1.6">
+                        "현재 강남권 상가 시장은 <strong>F&B(음식업)</strong> 위주의 재편이 뚜렷하며,<br>
+                        300-500만원 사이의 <strong>중소형 매물</strong>이 시장의 유동성을 주도하고 있습니다."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            rentDist: {"0-100": 0, "100-300": 1, "300-500": 5, "500-1000": 18, "1000-2000": 137, "2000-5000": 329, "5000+": 108},
+            businessDist: {"\uae30\ud0c0\uc5c5\uc885": 325, "\uc77c\ubc18\uc74c\uc2dd\uc810": 96, "\uc11c\ube44\uc2a4\uc5c5": 86, "\ud734\uac8c\uc74c\uc2dd\uc810": 85, "\uc624\ub77d\uc2a4\ud3ec\uce20": 36, "\uc8fc\ub958\uc810": 31, "\ud310\ub9e4\uc5c5": 14},
+            scatter: [{"deposit": 150000, "monthlyRent": 15000}, {"deposit": 80000, "monthlyRent": 4600}, {"deposit": 30000, "monthlyRent": 1900}, {"deposit": 30000, "monthlyRent": 2100}, {"deposit": 50000, "monthlyRent": 4060}, {"deposit": 30000, "monthlyRent": 2000}, {"deposit": 5000, "monthlyRent": 700}, {"deposit": 30000, "monthlyRent": 2100}, {"deposit": 100000, "monthlyRent": 6500}, {"deposit": 105000, "monthlyRent": 8700}, {"deposit": 40000, "monthlyRent": 4000}, {"deposit": 5000, "monthlyRent": 500}, {"deposit": 35000, "monthlyRent": 3200}, {"deposit": 100000, "monthlyRent": 4100}, {"deposit": 30000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 1300}, {"deposit": 35000, "monthlyRent": 2500}, {"deposit": 35000, "monthlyRent": 3500}, {"deposit": 30000, "monthlyRent": 3200}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 1080000, "monthlyRent": 90000}, {"deposit": 60000, "monthlyRent": 6800}, {"deposit": 60000, "monthlyRent": 4500}, {"deposit": 20000, "monthlyRent": 1900}, {"deposit": 50000, "monthlyRent": 5500}, {"deposit": 20000, "monthlyRent": 2500}, {"deposit": 20000, "monthlyRent": 2000}, {"deposit": 20000, "monthlyRent": 2500}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 30000, "monthlyRent": 5000}, {"deposit": 15000, "monthlyRent": 2100}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 50000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 1630}, {"deposit": 30000, "monthlyRent": 1750}, {"deposit": 30000, "monthlyRent": 1380}, {"deposit": 300000, "monthlyRent": 36000}, {"deposit": 60000, "monthlyRent": 4500}, {"deposit": 200000, "monthlyRent": 14000}, {"deposit": 130000, "monthlyRent": 5000}, {"deposit": 300000, "monthlyRent": 16000}, {"deposit": 120000, "monthlyRent": 9000}, {"deposit": 50000, "monthlyRent": 5200}, {"deposit": 30000, "monthlyRent": 2400}, {"deposit": 30000, "monthlyRent": 3300}, {"deposit": 25000, "monthlyRent": 2740}, {"deposit": 5000, "monthlyRent": 700}, {"deposit": 30000, "monthlyRent": 2200}, {"deposit": 55000, "monthlyRent": 4700}, {"deposit": 40000, "monthlyRent": 3000}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 20000, "monthlyRent": 1880}, {"deposit": 40000, "monthlyRent": 4500}, {"deposit": 30000, "monthlyRent": 3350}, {"deposit": 27600, "monthlyRent": 1730}, {"deposit": 30000, "monthlyRent": 2150}, {"deposit": 18000, "monthlyRent": 1800}, {"deposit": 50000, "monthlyRent": 6270}, {"deposit": 30000, "monthlyRent": 2000}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 150000, "monthlyRent": 12600}, {"deposit": 180000, "monthlyRent": 13500}, {"deposit": 50000, "monthlyRent": 5300}, {"deposit": 50000, "monthlyRent": 3700}, {"deposit": 100000, "monthlyRent": 5000}, {"deposit": 50000, "monthlyRent": 5000}, {"deposit": 30000, "monthlyRent": 3820}, {"deposit": 200000, "monthlyRent": 16500}, {"deposit": 30000, "monthlyRent": 2500}, {"deposit": 70000, "monthlyRent": 5000}, {"deposit": 200000, "monthlyRent": 12800}, {"deposit": 30000, "monthlyRent": 3600}, {"deposit": 18000, "monthlyRent": 1500}, {"deposit": 50000, "monthlyRent": 2500}, {"deposit": 50000, "monthlyRent": 3100}, {"deposit": 16000, "monthlyRent": 1250}, {"deposit": 20000, "monthlyRent": 2500}, {"deposit": 200000, "monthlyRent": 10600}, {"deposit": 500000, "monthlyRent": 42000}, {"deposit": 18000, "monthlyRent": 1910}, {"deposit": 50000, "monthlyRent": 2500}, {"deposit": 0, "monthlyRent": 4200}, {"deposit": 230000, "monthlyRent": 19050}, {"deposit": 40000, "monthlyRent": 3000}, {"deposit": 25000, "monthlyRent": 2000}, {"deposit": 100000, "monthlyRent": 7000}, {"deposit": 80000, "monthlyRent": 5000}, {"deposit": 80000, "monthlyRent": 8000}, {"deposit": 30000, "monthlyRent": 2500}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 65000, "monthlyRent": 5620}, {"deposit": 30000, "monthlyRent": 2600}, {"deposit": 4000, "monthlyRent": 6400}, {"deposit": 31000, "monthlyRent": 3000}, {"deposit": 100000, "monthlyRent": 9000}, {"deposit": 15000, "monthlyRent": 1010}, {"deposit": 40000, "monthlyRent": 2500}, {"deposit": 50000, "monthlyRent": 2900}, {"deposit": 50000, "monthlyRent": 3200}, {"deposit": 40000, "monthlyRent": 3400}, {"deposit": 90000, "monthlyRent": 5500}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 60000, "monthlyRent": 6300}, {"deposit": 60000, "monthlyRent": 5300}, {"deposit": 30000, "monthlyRent": 3600}, {"deposit": 10000, "monthlyRent": 850}, {"deposit": 100000, "monthlyRent": 6500}, {"deposit": 20000, "monthlyRent": 2000}, {"deposit": 15000, "monthlyRent": 1500}, {"deposit": 70000, "monthlyRent": 6300}, {"deposit": 200000, "monthlyRent": 16000}, {"deposit": 40000, "monthlyRent": 3100}, {"deposit": 100000, "monthlyRent": 7000}, {"deposit": 20000, "monthlyRent": 1600}, {"deposit": 80000, "monthlyRent": 6500}, {"deposit": 20000, "monthlyRent": 2200}, {"deposit": 50000, "monthlyRent": 2800}, {"deposit": 60000, "monthlyRent": 5000}, {"deposit": 200000, "monthlyRent": 12800}, {"deposit": 12000, "monthlyRent": 1580}, {"deposit": 150000, "monthlyRent": 8200}, {"deposit": 50000, "monthlyRent": 4200}, {"deposit": 50000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 3600}, {"deposit": 45000, "monthlyRent": 2800}, {"deposit": 30000, "monthlyRent": 1500}, {"deposit": 100000, "monthlyRent": 7300}, {"deposit": 60000, "monthlyRent": 5000}, {"deposit": 200000, "monthlyRent": 18000}, {"deposit": 20000, "monthlyRent": 2500}, {"deposit": 20000, "monthlyRent": 1700}, {"deposit": 60000, "monthlyRent": 4500}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 40000, "monthlyRent": 4000}, {"deposit": 40000, "monthlyRent": 4000}, {"deposit": 80000, "monthlyRent": 5450}, {"deposit": 150000, "monthlyRent": 6800}, {"deposit": 40000, "monthlyRent": 5250}, {"deposit": 50000, "monthlyRent": 2500}, {"deposit": 30000, "monthlyRent": 2400}, {"deposit": 25000, "monthlyRent": 2000}, {"deposit": 100000, "monthlyRent": 6800}, {"deposit": 36000, "monthlyRent": 3000}, {"deposit": 20000, "monthlyRent": 1800}, {"deposit": 15000, "monthlyRent": 1500}, {"deposit": 180000, "monthlyRent": 15000}, {"deposit": 40000, "monthlyRent": 2500}, {"deposit": 120000, "monthlyRent": 12400}, {"deposit": 20000, "monthlyRent": 1600}, {"deposit": 20000, "monthlyRent": 1500}, {"deposit": 20000, "monthlyRent": 1700}, {"deposit": 50000, "monthlyRent": 4300}, {"deposit": 15000, "monthlyRent": 1500}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 36000, "monthlyRent": 3000}, {"deposit": 150000, "monthlyRent": 13100}, {"deposit": 30000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 3300}, {"deposit": 40000, "monthlyRent": 3300}, {"deposit": 60000, "monthlyRent": 4800}, {"deposit": 30000, "monthlyRent": 4350}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 30000, "monthlyRent": 2500}, {"deposit": 18000, "monthlyRent": 1500}, {"deposit": 40000, "monthlyRent": 3300}, {"deposit": 100000, "monthlyRent": 6800}, {"deposit": 50000, "monthlyRent": 2500}, {"deposit": 150000, "monthlyRent": 13100}, {"deposit": 20000, "monthlyRent": 1100}, {"deposit": 100000, "monthlyRent": 9000}, {"deposit": 40000, "monthlyRent": 3200}, {"deposit": 30000, "monthlyRent": 2500}, {"deposit": 10000, "monthlyRent": 1100}, {"deposit": 100000, "monthlyRent": 10450}, {"deposit": 12000, "monthlyRent": 1600}, {"deposit": 70000, "monthlyRent": 6500}, {"deposit": 50000, "monthlyRent": 3700}, {"deposit": 150000, "monthlyRent": 8500}, {"deposit": 20000, "monthlyRent": 1800}, {"deposit": 15000, "monthlyRent": 1150}, {"deposit": 50000, "monthlyRent": 5400}, {"deposit": 200000, "monthlyRent": 15000}, {"deposit": 150000, "monthlyRent": 8000}, {"deposit": 20000, "monthlyRent": 2100}, {"deposit": 100000, "monthlyRent": 8000}, {"deposit": 8000, "monthlyRent": 1350}, {"deposit": 50000, "monthlyRent": 3900}, {"deposit": 100000, "monthlyRent": 6500}, {"deposit": 5000, "monthlyRent": 600}, {"deposit": 80000, "monthlyRent": 5000}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 120000, "monthlyRent": 10000}, {"deposit": 35000, "monthlyRent": 2800}, {"deposit": 40000, "monthlyRent": 2310}, {"deposit": 20000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 3000}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 16750, "monthlyRent": 1680}, {"deposit": 50000, "monthlyRent": 2850}, {"deposit": 20000, "monthlyRent": 2100}, {"deposit": 20000, "monthlyRent": 2420}, {"deposit": 40000, "monthlyRent": 5000}, {"deposit": 100000, "monthlyRent": 8500}, {"deposit": 400000, "monthlyRent": 25000}, {"deposit": 20000, "monthlyRent": 2100}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 30000, "monthlyRent": 2000}, {"deposit": 25000, "monthlyRent": 1900}, {"deposit": 50000, "monthlyRent": 3800}, {"deposit": 40000, "monthlyRent": 3100}, {"deposit": 30000, "monthlyRent": 3500}, {"deposit": 30000, "monthlyRent": 2100}, {"deposit": 20000, "monthlyRent": 1700}, {"deposit": 15000, "monthlyRent": 1100}, {"deposit": 100000, "monthlyRent": 9000}, {"deposit": 120000, "monthlyRent": 8000}, {"deposit": 100000, "monthlyRent": 6900}, {"deposit": 80000, "monthlyRent": 5000}, {"deposit": 60000, "monthlyRent": 6800}, {"deposit": 35000, "monthlyRent": 3000}, {"deposit": 50000, "monthlyRent": 4400}, {"deposit": 15000, "monthlyRent": 2000}, {"deposit": 150000, "monthlyRent": 12500}, {"deposit": 50000, "monthlyRent": 4000}, {"deposit": 55000, "monthlyRent": 5000}, {"deposit": 30000, "monthlyRent": 2400}, {"deposit": 50000, "monthlyRent": 4400}, {"deposit": 170000, "monthlyRent": 16000}, {"deposit": 5000, "monthlyRent": 660}, {"deposit": 200000, "monthlyRent": 13900}, {"deposit": 75000, "monthlyRent": 7750}, {"deposit": 20000, "monthlyRent": 2200}, {"deposit": 23000, "monthlyRent": 1950}, {"deposit": 5000, "monthlyRent": 450}, {"deposit": 100000, "monthlyRent": 7500}, {"deposit": 195000, "monthlyRent": 13550}, {"deposit": 100000, "monthlyRent": 5500}, {"deposit": 30000, "monthlyRent": 3000}, {"deposit": 0, "monthlyRent": 0}, {"deposit": 55000, "monthlyRent": 4500}, {"deposit": 50000, "monthlyRent": 2200}, {"deposit": 100000, "monthlyRent": 7000}, {"deposit": 150000, "monthlyRent": 12870}, {"deposit": 450000, "monthlyRent": 19000}, {"deposit": 50000, "monthlyRent": 6000}, {"deposit": 10000, "monthlyRent": 1600}, {"deposit": 300000, "monthlyRent": 18000}, {"deposit": 50000, "monthlyRent": 3500}, {"deposit": 10000, "monthlyRent": 2200}, {"deposit": 60000, "monthlyRent": 3300}, {"deposit": 30000, "monthlyRent": 3500}, {"deposit": 30000, "monthlyRent": 2000}, {"deposit": 30000, "monthlyRent": 4350}, {"deposit": 50000, "monthlyRent": 3100}, {"deposit": 150000, "monthlyRent": 7000}, {"deposit": 200000, "monthlyRent": 10000}, {"deposit": 40000, "monthlyRent": 2520}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 100000, "monthlyRent": 7200}, {"deposit": 25000, "monthlyRent": 1800}, {"deposit": 10000, "monthlyRent": 1300}, {"deposit": 100000, "monthlyRent": 4500}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 25000, "monthlyRent": 5600}, {"deposit": 30000, "monthlyRent": 2000}, {"deposit": 60000, "monthlyRent": 4380}, {"deposit": 45000, "monthlyRent": 4000}, {"deposit": 100000, "monthlyRent": 8500}, {"deposit": 20000, "monthlyRent": 1150}, {"deposit": 20000, "monthlyRent": 1300}, {"deposit": 20000, "monthlyRent": 1300}, {"deposit": 60000, "monthlyRent": 5000}, {"deposit": 100000, "monthlyRent": 6200}, {"deposit": 50000, "monthlyRent": 4300}, {"deposit": 11700, "monthlyRent": 2430}, {"deposit": 32000, "monthlyRent": 2700}, {"deposit": 40000, "monthlyRent": 3600}, {"deposit": 150000, "monthlyRent": 11000}, {"deposit": 70000, "monthlyRent": 5700}, {"deposit": 150000, "monthlyRent": 8500}, {"deposit": 40000, "monthlyRent": 2100}, {"deposit": 10000, "monthlyRent": 900}, {"deposit": 20000, "monthlyRent": 1400}, {"deposit": 100000, "monthlyRent": 7500}, {"deposit": 18000, "monthlyRent": 1500}, {"deposit": 100000, "monthlyRent": 5000}, {"deposit": 50000, "monthlyRent": 4500}, {"deposit": 30000, "monthlyRent": 2400}, {"deposit": 30000, "monthlyRent": 3000}, {"deposit": 400000, "monthlyRent": 30000}, {"deposit": 70000, "monthlyRent": 4500}, {"deposit": 35000, "monthlyRent": 3200}, {"deposit": 10000, "monthlyRent": 1250}, {"deposit": 30000, "monthlyRent": 3350}, {"deposit": 200000, "monthlyRent": 12000}, {"deposit": 20000, "monthlyRent": 1500}, {"deposit": 50000, "monthlyRent": 2900}, {"deposit": 30000, "monthlyRent": 2300}, {"deposit": 20000, "monthlyRent": 1000}],
+            sizeDist: {"~10\ud3c9": 66, "10~20\ud3c9": 144, "20~30\ud3c9": 123, "30~50\ud3c9": 188, "50~100\ud3c9": 115, "100\ud3c9+": 36},
+            floorDist: {"1": 209, "-1": 123, "2": 108, "4": 59, "3": 57, "5": 44, "6": 23, "7": 12, "10": 9, "8": 8}
+        };
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Pretendard';
+
+        // 1. Monthly Rent Dist
+        new Chart(document.getElementById('rentDistChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data.rentDist),
+                datasets: [{
+                    label: '매물 수',
+                    data: Object.values(data.rentDist),
+                    backgroundColor: '#6366f1',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
+            }
+        });
+
+        // 2. Business Pie
+        new Chart(document.getElementById('businessPieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(data.businessDist),
+                datasets: [{
+                    data: Object.values(data.businessDist),
+                    backgroundColor: [
+                        '#6366f1', '#a855f7', '#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#ec4899'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { padding: 20, usePointStyle: true } }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // 3. Scatter
+        new Chart(document.getElementById('rentScatterChart'), {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: '매물',
+                    data: data.scatter.map(d => ({ x: d.deposit, y: d.monthlyRent })),
+                    backgroundColor: 'rgba(244, 63, 94, 0.6)',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { title: { display: true, text: '보증금 (만원)' }, grid: { color: '#1e293b' } },
+                    y: { title: { display: true, text: '월세 (만원)' }, grid: { color: '#1e293b' } }
+                }
+            }
+        });
+
+        // 4. Size Bar
+        new Chart(document.getElementById('sizeBarChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data.sizeDist),
+                datasets: [{
+                    label: '매물 수',
+                    data: Object.values(data.sizeDist),
+                    backgroundColor: '#a855f7',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { grid: { color: '#1e293b' } }, y: { grid: { display: false } } }
+            }
+        });
+
+        // 5. Floor Bar
+        new Chart(document.getElementById('floorChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(data.floorDist).map(f => f + '층'),
+                datasets: [{
+                    label: '매물 수',
+                    data: Object.values(data.floorDist),
+                    backgroundColor: '#10b981',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
+            }
+        });
+    </script>
+</body>
+</html>
+    
